@@ -1,0 +1,126 @@
+.evolution {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 2rem;
+}
+
+.evolution-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.level-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.level-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.level-card.level-0::before { background: #666; }
+.level-card.level-1::before { background: var(--accent-green); }
+.level-card.level-2::before { background: var(--accent-blue); }
+.level-card.level-3::before { background: var(--accent-purple); }
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.level-header h3 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.level-count {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.level-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.level-metric {
+  color: var(--accent-green);
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.ai-performance {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+}
+
+.ai-performance h2 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.ai-engine {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.ai-engine h4 {
+  color: var(--accent-purple);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.ai-score {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent-green);
+  margin-bottom: 0.3rem;
+}
+
+.ai-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .evolution-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ai-grid {
+    grid-template-columns: 1fr;
+  }
+} 

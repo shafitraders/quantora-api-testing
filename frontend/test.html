@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantora Systems - Revolutionary AI Trading Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center mb-2">Quantora System Tests</h1>
+            <p class="text-gray-400 text-center">Test backend API and WebSocket connections</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- API Endpoints Tests -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">API Endpoints Tests</h2>
+                
+                <div class="space-y-4">
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">System Health</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="testHealthCheck()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                Health Check
+                            </button>
+                            <button onclick="testSystemStatus()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                System Status
+                            </button>
+                        </div>
+                        <div id="healthResult" class="mt-2 p-2 rounded hidden"></div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">Pattern Discovery</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="getLivePatterns()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                Live Patterns
+                            </button>
+                            <button onclick="getPatternStats()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                Pattern Stats
+                            </button>
+                        </div>
+                        <div id="patternsResult" class="mt-2 p-2 rounded hidden"></div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">System Status</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="getWebSocketStatus()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                WebSocket Status
+                            </button>
+                            <button onclick="getSystemMetrics()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                System Metrics
+                            </button>
+                        </div>
+                        <div id="wsStatusResult" class="mt-2 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WebSocket Tests -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">WebSocket Tests</h2>
+                
+                <div class="space-y-4">
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">Connection Status</h3>
+                        <div id="wsStatus" class="inline-block px-3 py-1 rounded bg-gray-700">
+                            Disconnected
+                        </div>
+                        <button onclick="toggleWebSocket()" class="ml-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                            Connect/Disconnect
+                        </button>
+                    </div>
+
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">Send Test Message</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="wsMessage" 
+                                   class="flex-1 bg-gray-700 px-3 py-2 rounded" 
+                                   placeholder="Enter test message">
+                            <button onclick="sendWebSocketMessage()" 
+                                    class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3 class="text-lg mb-2">WebSocket Log</h3>
+                        <div id="wsLog" class="bg-gray-700 p-3 rounded h-40 overflow-y-auto">
+                            <div class="text-gray-400">No messages yet...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

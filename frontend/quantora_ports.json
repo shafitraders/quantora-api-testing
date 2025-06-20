@@ -1,0 +1,21 @@
+{
+  "quantora_ports": {
+    "frontend": {
+      "primary": 3000,
+      "fallback": [3001, 3002, 3003]
+    },
+    "backend": {
+      "primary": 8000,
+      "fallback": [8001, 8002, 8003]
+    },
+    "database": {
+      "postgres": 5432,
+      "redis": 6379,
+      "influxdb": 8086
+    },
+    "monitoring": {
+      "prometheus": 9090,
+      "grafana": 3001
+    }
+  }
+}

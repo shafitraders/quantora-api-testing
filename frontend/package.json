@@ -1,0 +1,26 @@
+{
+  "name": "quantora-dashboard",
+  "version": "2.0.0",
+  "description": "Revolutionary AI Trading Intelligence Dashboard",
+  "main": "enhanced_server.js",
+  "scripts": {
+    "start": "node enhanced_server.js",
+    "start-smart": "./start_quantora_smart.sh",
+    "dev": "node enhanced_server.js",
+    "build": "echo 'Build complete - Static files ready'",
+    "serve": "node enhanced_server.js",
+    "cleanup": "./cleanup_ports.sh",
+    "check-ports": "lsof -i :3000 && lsof -i :8000 || echo 'Ports are available'"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "keywords": [
+    "trading",
+    "ai",
+    "dashboard",
+    "quantora"
+  ],
+  "author": "Quantora Systems",
+  "license": "MIT"
+}
