@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Quantora Debug Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section {
+            background: #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 5px;
+        }
+        .log {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Quantora Debug Dashboard</h1>
+    
+    <div class="debug-section">
+        <h3>🔐 Authentication</h3>
+        <input type="text" id="tokenInput" placeholder="Paste your Google Cloud Identity Token here..." />
+        <button onclick="setToken()">Set Token</button>
+        <button onclick="testProxyHealth()">Test Proxy Health</button>
+        <button onclick="testDirectAPI()">Test Direct API (should fail)</button>
+        <button onclick="testProxyAPI()">Test Proxy API</button>
+        <div id="auth-status">⏳ Waiting for token...</div>
+    </div>
+
+    <div class="debug-section">
+        <h3>📊 Test Results</h3>
+        <div id="test-results" class="log"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>🌐 Network Info</h3>
+        <div id="network-info"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        const PROXY_BASE = 'http://localhost:3001/api';
+        const DIRECT_API = 'https://quantora-production-api-387275137268.us-central1.run.app';
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('test-results');
+            const color = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            logDiv.innerHTML += `<span class="${color}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function setToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                authToken = token;
+                localStorage.setItem('quantora_debug_token', token);
+                document.getElementById('auth-status').innerHTML = 
+                    '<span class="success">✅ Token set! Ready to test.</span>';
+                log('Token set successfully', 'success');
+            } else {
+                alert('Please paste a valid token');
+            }
+        }
+
+        async function testProxyHealth() {
+            log('Testing proxy health...', 'info');
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.text();
+                log(`Proxy health response: ${response.status} - ${data}`, 'success');
+            } catch (error) {
+                log(`Proxy health error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDirectAPI() {
+            if (!authToken) {
+                log('No token set for direct API test', 'error');
+                return;
+            }
+            
+            log('Testing direct API (should fail with CORS)...', 'info');
+            try {
+                const response = await fetch(DIRECT_API + '/health', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.text();
+                log(`Direct API response: ${response.status} - ${data}`, 'success');
+            } catch (error) {
+                log(`Direct API error (expected): ${error.message}`, 'warning');
+            }
+        }
+
+        async function testProxyAPI() {
+            if (!authToken) {
+                log('No token set for proxy API test', 'error');
+                return;
+            }
+            
+            log('Testing proxy API...', 'info');
+            try {
+                const response = await fetch(PROXY_BASE + '/health', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.text();
+                log(`Proxy API response: ${response.status} - ${data}`, 'success');
+                
+                if (response.ok) {
+                    document.getElementById('auth-status').innerHTML = 
+                        '<span class="success">✅ Proxy API working!</span>';
+                } else {
+                    log(`Proxy API failed: ${response.status} - ${data}`, 'error');
+                }
+            } catch (error) {
+                log(`Proxy API error: ${error.message}`, 'error');
+            }
+        }
+
+        // Load token from localStorage
+        window.addEventListener('load', function() {
+            const storedToken = localStorage.getItem('quantora_debug_token');
+            if (storedToken) {
+                authToken = storedToken;
+                document.getElementById('tokenInput').value = storedToken;
+                document.getElementById('auth-status').innerHTML = 
+                    '<span class="success">✅ Token loaded from storage</span>';
+            }
+            
+            // Show network info
+            document.getElementById('network-info').innerHTML = `
+                <p><strong>Proxy URL:</strong> ${PROXY_BASE}</p>
+                <p><strong>Direct API:</strong> ${DIRECT_API}</p>
+                <p><strong>Current Origin:</strong> ${window.location.origin}</p>
+            `;
+        });
+    </script>
+</body>
+</html> 

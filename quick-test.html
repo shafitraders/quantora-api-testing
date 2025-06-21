@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Quick Token Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-box {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 4px;
+        }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Quick Token Test</h1>
+    
+    <div class="test-box">
+        <h3>🔑 Paste your token:</h3>
+        <input type="text" id="tokenInput" placeholder="Paste your Google Cloud Identity Token here..." />
+        <button onclick="testToken()">🚀 Test Token</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>📋 Console Test</h3>
+        <p>Open browser console (F12) and run this command:</p>
+        <div class="result" id="consoleCommand"></div>
+        <button onclick="copyToClipboard()">📋 Copy Command</button>
+    </div>
+
+    <script>
+        const API_BASE = 'https://quantora-production-api-387275137268.us-central1.run.app';
+        
+        async function testToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<span class="error">❌ Please paste a token</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ Testing...';
+            
+            try {
+                console.log('Testing token:', token.substring(0, 50) + '...');
+                
+                const response = await fetch(API_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                console.log('Response:', response.status, data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ SUCCESS!
+Status: ${response.status}
+Data: ${data}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ FAILED!
+Status: ${response.status}
+Data: ${data}</span>`;
+                }
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ ERROR!
+${error.message}</span>`;
+            }
+        }
+        
+        function copyToClipboard() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) {
+                alert('Please paste a token first');
+                return;
+            }
+            
+            const command = `fetch('${API_BASE}/health', {method: 'GET', headers: {'Authorization': 'Bearer ${token}', 'Content-Type': 'application/json'}}).then(r => r.text()).then(console.log).catch(console.error)`;
+            
+            navigator.clipboard.writeText(command).then(() => {
+                alert('Command copied to clipboard! Paste it in the browser console (F12)');
+            });
+        }
+        
+        // Auto-generate console command when token is pasted
+        document.getElementById('tokenInput').addEventListener('input', function() {
+            const token = this.value.trim();
+            if (token) {
+                const command = `fetch('${API_BASE}/health', {method: 'GET', headers: {'Authorization': 'Bearer ${token}', 'Content-Type': 'application/json'}}).then(r => r.text()).then(console.log).catch(console.error)`;
+                document.getElementById('consoleCommand').textContent = command;
+            }
+        });
+    </script>
+</body>
+</html> 

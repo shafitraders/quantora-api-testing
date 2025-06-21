@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Quantora Auth Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section {
+            background: #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 4px;
+        }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0099cc;
+        }
+        .result {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Quantora Authentication Debug</h1>
+    
+    <div class="debug-section">
+        <h2>Step 1: Token Input</h2>
+        <p>Paste your Google Cloud Identity Token here:</p>
+        <input type="text" id="tokenInput" placeholder="Paste token here..." />
+        <button onclick="setToken()">Set Token</button>
+        <button onclick="clearToken()">Clear Token</button>
+        <div id="tokenStatus" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Step 2: Test Token</h2>
+        <button onclick="testToken()">Test Token with API</button>
+        <div id="testResult" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Step 3: Manual Curl Test</h2>
+        <p>Copy this command and run it in your terminal:</p>
+        <div id="curlCommand" class="result"></div>
+        <button onclick="generateCurlCommand()">Generate Curl Command</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>Step 4: Browser Console</h2>
+        <p>Open browser console (F12) and check for errors</p>
+        <button onclick="logDebugInfo()">Log Debug Info to Console</button>
+    </div>
+
+    <script>
+        const API_BASE = 'https://quantora-production-api-387275137268.us-central1.run.app';
+        let currentToken = null;
+
+        function setToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                currentToken = token;
+                localStorage.setItem('debug_auth_token', token);
+                document.getElementById('tokenStatus').innerHTML = 
+                    '<span class="success">✅ Token set! Length: ' + token.length + ' characters</span>';
+                console.log('Token set:', token.substring(0, 50) + '...');
+            } else {
+                document.getElementById('tokenStatus').innerHTML = 
+                    '<span class="error">❌ Please enter a token</span>';
+            }
+        }
+
+        function clearToken() {
+            currentToken = null;
+            localStorage.removeItem('debug_auth_token');
+            document.getElementById('tokenInput').value = '';
+            document.getElementById('tokenStatus').innerHTML = 
+                '<span class="warning">🗑️ Token cleared</span>';
+        }
+
+        async function testToken() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '⏳ Testing...';
+            
+            if (!currentToken) {
+                resultDiv.innerHTML = '<span class="error">❌ No token set</span>';
+                return;
+            }
+
+            try {
+                console.log('Making request to:', API_BASE + '/health');
+                console.log('Token length:', currentToken.length);
+                console.log('Token preview:', currentToken.substring(0, 50) + '...');
+
+                const response = await fetch(API_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                const data = await response.text();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ SUCCESS!
+Status: ${response.status}
+Data: ${data}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ FAILED!
+Status: ${response.status} ${response.statusText}
+Data: ${data}</span>`;
+                }
+            } catch (error) {
+                console.error('Request failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ ERROR!
+${error.message}
+Type: ${error.name}</span>`;
+            }
+        }
+
+        function generateCurlCommand() {
+            if (!currentToken) {
+                document.getElementById('curlCommand').innerHTML = 
+                    '<span class="error">❌ No token set</span>';
+                return;
+            }
+
+            const curlCmd = `curl -X GET "${API_BASE}/health" \\
+  -H "Authorization: Bearer ${currentToken}" \\
+  -H "Content-Type: application/json" \\
+  -v`;
+            
+            document.getElementById('curlCommand').textContent = curlCmd;
+        }
+
+        function logDebugInfo() {
+            console.log('=== QUANTORA AUTH DEBUG INFO ===');
+            console.log('API Base:', API_BASE);
+            console.log('Token set:', !!currentToken);
+            console.log('Token length:', currentToken ? currentToken.length : 0);
+            console.log('Local storage token:', !!localStorage.getItem('debug_auth_token'));
+            console.log('User agent:', navigator.userAgent);
+            console.log('Current URL:', window.location.href);
+            console.log('================================');
+        }
+
+        // Load token from localStorage on page load
+        window.addEventListener('load', function() {
+            const storedToken = localStorage.getItem('debug_auth_token');
+            if (storedToken) {
+                currentToken = storedToken;
+                document.getElementById('tokenInput').value = storedToken;
+                document.getElementById('tokenStatus').innerHTML = 
+                    '<span class="success">✅ Token loaded from storage</span>';
+            }
+        });
+    </script>
+</body>
+</html> 

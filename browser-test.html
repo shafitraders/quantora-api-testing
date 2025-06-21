@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 Browser Compatibility Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            background: #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        .info { color: #00d4ff; }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 Browser Compatibility & CORS Test</h1>
+    
+    <div class="test-section">
+        <h2>🔍 Browser Information</h2>
+        <div id="browserInfo" class="result"></div>
+        <button onclick="checkBrowserInfo()">Check Browser Info</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔑 Token Test</h2>
+        <input type="text" id="tokenInput" placeholder="Paste your token here..." style="width: 100%; padding: 10px; margin: 10px 0; background: #555; color: white; border: 1px solid #777; border-radius: 4px;">
+        <button onclick="testToken()">Test Token</button>
+        <div id="tokenResult" class="result"></div>
+    </div>
+
+    <div class="test-grid">
+        <div class="test-section">
+            <h2>🌐 CORS Preflight Test</h2>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="corsResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📡 Network Test</h2>
+            <button onclick="testNetwork()">Test Network</button>
+            <div id="networkResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Detailed Request Test</h2>
+        <button onclick="testDetailedRequest()">Test Detailed Request</button>
+        <div id="detailedResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 All Tests Summary</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <div id="summaryResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://quantora-production-api-387275137268.us-central1.run.app';
+        let currentToken = null;
+
+        function checkBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt
+                } : 'Not available',
+                webdriver: navigator.webdriver,
+                vendor: navigator.vendor,
+                appVersion: navigator.appVersion
+            };
+            
+            document.getElementById('browserInfo').textContent = 
+                'Browser Information:\n' + JSON.stringify(info, null, 2);
+        }
+
+        function testToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) {
+                document.getElementById('tokenResult').innerHTML = 
+                    '<span class="error">❌ No token provided</span>';
+                return;
+            }
+
+            currentToken = token;
+            document.getElementById('tokenResult').innerHTML = 
+                '<span class="success">✅ Token set (length: ' + token.length + ' characters)</span>';
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('corsResult');
+            resultDiv.innerHTML = '⏳ Testing CORS...';
+
+            try {
+                console.log('Testing CORS preflight...');
+                // Test OPTIONS request (CORS preflight)
+                const response = await fetch(API_BASE + '/health', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Authorization, Content-Type'
+                    }
+                });
+
+                console.log('CORS response status:', response.status);
+                console.log('CORS response headers:', Object.fromEntries(response.headers.entries()));
+
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Max-Age': response.headers.get('Access-Control-Max-Age')
+                };
+
+                resultDiv.innerHTML = `<span class="success">✅ CORS Test Results:
+Status: ${response.status}
+Headers: ${JSON.stringify(corsHeaders, null, 2)}
+Origin: ${window.location.origin}</span>`;
+            } catch (error) {
+                console.error('CORS test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ CORS Test Failed:
+${error.message}
+Type: ${error.name}</span>`;
+            }
+        }
+
+        async function testNetwork() {
+            const resultDiv = document.getElementById('networkResult');
+            resultDiv.innerHTML = '⏳ Testing network connectivity...';
+
+            try {
+                console.log('Testing network connectivity...');
+                // Test basic connectivity
+                const start = Date.now();
+                const response = await fetch(API_BASE + '/health', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                const end = Date.now();
+
+                console.log('Network response status:', response.status);
+                console.log('Network response time:', end - start, 'ms');
+
+                resultDiv.innerHTML = `<span class="success">✅ Network Test Results:
+Status: ${response.status}
+Response Time: ${end - start}ms
+Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</span>`;
+            } catch (error) {
+                console.error('Network test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ Network Test Failed:
+${error.message}
+Type: ${error.name}</span>`;
+            }
+        }
+
+        async function testDetailedRequest() {
+            const resultDiv = document.getElementById('detailedResult');
+            resultDiv.innerHTML = '⏳ Testing detailed request...';
+
+            if (!currentToken) {
+                resultDiv.innerHTML = '<span class="error">❌ No token set - please set token first</span>';
+                return;
+            }
+
+            try {
+                console.log('Making detailed request...');
+                console.log('URL:', API_BASE + '/health');
+                console.log('Token length:', currentToken.length);
+                console.log('Token preview:', currentToken.substring(0, 50) + '...');
+
+                const start = Date.now();
+                const response = await fetch(API_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Accept': 'application/json',
+                        'User-Agent': 'Quantora-Browser-Test/1.0'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                const end = Date.now();
+
+                console.log('Response received:', response.status, response.statusText);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                const data = await response.text();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Detailed Request Results:
+Status: ${response.status} ${response.statusText}
+Response Time: ${end - start}ms
+Data: ${data}
+Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Detailed Request Failed:
+Status: ${response.status} ${response.statusText}
+Data: ${data}
+Response Time: ${end - start}ms</span>`;
+                }
+            } catch (error) {
+                console.error('Detailed request failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ Detailed Request Failed:
+${error.message}
+Type: ${error.name}
+Stack: ${error.stack}</span>`;
+            }
+        }
+
+        async function runAllTests() {
+            const resultDiv = document.getElementById('summaryResult');
+            resultDiv.innerHTML = '⏳ Running all tests...\n\n';
+
+            // Check if token is set first
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                currentToken = token;
+                resultDiv.innerHTML += '✅ Token found and set\n';
+            } else {
+                resultDiv.innerHTML += '⚠️ No token set - some tests may fail\n';
+            }
+
+            const tests = [
+                { name: 'Browser Info', func: checkBrowserInfo, async: false },
+                { name: 'CORS Test', func: testCORS, async: true },
+                { name: 'Network Test', func: testNetwork, async: true },
+                { name: 'Detailed Request', func: testDetailedRequest, async: true }
+            ];
+
+            for (const test of tests) {
+                resultDiv.innerHTML += `Running ${test.name}...\n`;
+                try {
+                    if (test.async) {
+                        await test.func();
+                    } else {
+                        test.func();
+                    }
+                    resultDiv.innerHTML += `✅ ${test.name} completed\n`;
+                } catch (error) {
+                    resultDiv.innerHTML += `❌ ${test.name} failed: ${error.message}\n`;
+                }
+                resultDiv.innerHTML += '\n';
+                
+                // Add a small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            resultDiv.innerHTML += '🎉 All tests completed! Check individual results above.';
+        }
+
+        // Auto-run browser info on load
+        window.addEventListener('load', function() {
+            checkBrowserInfo();
+        });
+    </script>
+</body>
+</html> 

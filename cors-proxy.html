@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 CORS Proxy Solution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .solution-box {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00d4ff;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        .info { color: #00d4ff; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 4px;
+        }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 CORS Proxy Solution</h1>
+    
+    <div class="solution-box">
+        <h2>🔍 Problem Identified</h2>
+        <p><span class="error">❌ CORS Issue:</span> The Google Cloud Run API is blocking browser requests due to CORS configuration.</p>
+        <p><span class="success">✅ Solution:</span> Use a CORS proxy or update the API configuration.</p>
+    </div>
+
+    <div class="solution-box">
+        <h2>🚀 Solution 1: CORS Proxy Test</h2>
+        <p>Test using a public CORS proxy:</p>
+        <input type="text" id="tokenInput" placeholder="Paste your Google Cloud Identity Token here..." />
+        <button onclick="testWithProxy()">🌐 Test with CORS Proxy</button>
+        <div id="proxyResult" class="result"></div>
+    </div>
+
+    <div class="solution-box">
+        <h2>🔧 Solution 2: Update API Configuration</h2>
+        <p>The backend needs to be updated to allow CORS requests. Here's what needs to be added:</p>
+        <div class="code-block">
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+        </div>
+        <button onclick="showBackendFix()">📋 Show Backend Fix</button>
+    </div>
+
+    <div class="solution-box">
+        <h2>💡 Solution 3: Use Node.js Proxy Server</h2>
+        <p>Create a local proxy server to bypass CORS:</p>
+        <div class="code-block">
+// proxy-server.js
+const express = require('express');
+const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+const app = express();
+app.use(cors());
+
+app.use('/api', createProxyMiddleware({
+    target: 'https://quantora-production-api-387275137268.us-central1.run.app',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api': ''
+    }
+}));
+
+app.listen(3001, () => {
+    console.log('Proxy server running on http://localhost:3001');
+});
+        </div>
+        <button onclick="createProxyServer()">🚀 Create Proxy Server</button>
+    </div>
+
+    <div class="solution-box">
+        <h2>🎯 Quick Fix: Use Production Frontend</h2>
+        <p>The production frontend should already be configured to work with the API. Try accessing:</p>
+        <p><a href="https://quantora-production-dashboard-387275137268.us-central1.run.app" target="_blank" style="color: #00d4ff;">🌐 Production Dashboard</a></p>
+    </div>
+
+    <script>
+        const API_BASE = 'https://quantora-production-api-387275137268.us-central1.run.app';
+        
+        async function testWithProxy() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('proxyResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<span class="error">❌ Please paste a token</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ Testing with CORS proxy...';
+            
+            try {
+                // Use a public CORS proxy
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(proxyUrl + API_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ SUCCESS with CORS Proxy!
+Status: ${response.status}
+Data: ${data}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ FAILED with CORS Proxy:
+Status: ${response.status}
+Data: ${data}</span>`;
+                }
+            } catch (error) {
+                console.error('Proxy test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ CORS Proxy Error:
+${error.message}
+
+Note: The public CORS proxy might be rate-limited. Try the other solutions below.</span>`;
+            }
+        }
+        
+        function showBackendFix() {
+            alert(`Backend CORS Fix Required:
+
+1. Open backend/main.py
+2. Add this import: from fastapi.middleware.cors import CORSMiddleware
+3. Add this middleware after creating the FastAPI app:
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+4. Redeploy the backend to Google Cloud Run
+
+This will allow browser requests to work properly.`);
+        }
+        
+        function createProxyServer() {
+            const proxyCode = `// Save this as proxy-server.js
+const express = require('express');
+const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+const app = express();
+app.use(cors());
+
+app.use('/api', createProxyMiddleware({
+    target: '${API_BASE}',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api': ''
+    }
+}));
+
+app.listen(3001, () => {
+    console.log('Proxy server running on http://localhost:3001');
+    console.log('Use http://localhost:3001/api/health instead of ${API_BASE}/health');
+});
+
+// Install dependencies:
+// npm install express cors http-proxy-middleware`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(proxyCode).then(() => {
+                alert('Proxy server code copied to clipboard!\n\nSave it as proxy-server.js and run:\nnpm install express cors http-proxy-middleware\nnode proxy-server.js');
+            });
+        }
+    </script>
+</body>
+</html> 

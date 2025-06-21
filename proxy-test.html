@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Quantora Proxy Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-box {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00d4ff;
+        }
+        .success { color: #4ecdc4; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 4px;
+        }
+        button {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .setup-steps {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quantora Proxy Test</h1>
+    
+    <div class="test-box">
+        <h2>📋 Setup Instructions</h2>
+        <div class="setup-steps">
+            <p><strong>Step 1:</strong> Install dependencies</p>
+            <code>npm install</code>
+            
+            <p><strong>Step 2:</strong> Start the proxy server</p>
+            <code>npm start</code>
+            
+            <p><strong>Step 3:</strong> Test with your token below</p>
+        </div>
+    </div>
+
+    <div class="test-box">
+        <h2>🔑 Token Test (via Proxy)</h2>
+        <p>This will work with the local proxy server running on port 3001:</p>
+        <input type="text" id="tokenInput" placeholder="Paste your Google Cloud Identity Token here..." />
+        <button onclick="testWithProxy()">🚀 Test via Proxy</button>
+        <button onclick="testDirect()">🌐 Test Direct (will fail)</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>📊 Multiple Endpoint Test</h2>
+        <button onclick="testAllEndpoints()">🧪 Test All Endpoints</button>
+        <div id="endpointsResult" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>🔧 Console Commands</h2>
+        <p>Test these commands in your browser console (F12):</p>
+        <div class="result" id="consoleCommands"></div>
+        <button onclick="copyCommands()">📋 Copy Commands</button>
+    </div>
+
+    <script>
+        const PROXY_BASE = 'http://localhost:3001/api';
+        const DIRECT_BASE = 'https://quantora-production-api-387275137268.us-central1.run.app';
+        let currentToken = null;
+
+        function updateConsoleCommands() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                const commands = `// Test via Proxy (should work)
+fetch('${PROXY_BASE}/health', {
+  headers: { 'Authorization': 'Bearer ${token}' }
+}).then(r => r.text()).then(console.log).catch(console.error)
+
+// Test direct (will fail due to CORS)
+fetch('${DIRECT_BASE}/health', {
+  headers: { 'Authorization': 'Bearer ${token}' }
+}).then(r => r.text()).then(console.log).catch(console.error)`;
+                
+                document.getElementById('consoleCommands').textContent = commands;
+            }
+        }
+
+        async function testWithProxy() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<span class="error">❌ Please paste a token</span>';
+                return;
+            }
+            
+            currentToken = token;
+            resultDiv.innerHTML = '⏳ Testing via proxy...';
+            
+            try {
+                console.log('Testing via proxy:', PROXY_BASE + '/health');
+                
+                const response = await fetch(PROXY_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                console.log('Proxy response:', response.status, data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ SUCCESS via Proxy!
+Status: ${response.status}
+Data: ${data}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ FAILED via Proxy:
+Status: ${response.status}
+Data: ${data}</span>`;
+                }
+            } catch (error) {
+                console.error('Proxy test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ PROXY ERROR:
+${error.message}
+
+Make sure the proxy server is running on port 3001!</span>`;
+            }
+        }
+
+        async function testDirect() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<span class="error">❌ Please paste a token</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ Testing direct (will fail due to CORS)...';
+            
+            try {
+                console.log('Testing direct:', DIRECT_BASE + '/health');
+                
+                const response = await fetch(DIRECT_BASE + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                console.log('Direct response:', response.status, data);
+                
+                resultDiv.innerHTML = `<span class="warning">⚠️ Direct test result:
+Status: ${response.status}
+Data: ${data}
+
+Note: This might work if CORS is fixed, but usually fails.</span>`;
+            } catch (error) {
+                console.error('Direct test failed:', error);
+                resultDiv.innerHTML = `<span class="error">❌ DIRECT TEST FAILED (Expected):
+${error.message}
+
+This is why we need the proxy!</span>`;
+            }
+        }
+
+        async function testAllEndpoints() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('endpointsResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<span class="error">❌ Please paste a token first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ Testing all endpoints...\n\n';
+            
+            const endpoints = [
+                '/health',
+                '/system/status',
+                '/patterns/live'
+            ];
+            
+            for (const endpoint of endpoints) {
+                resultDiv.innerHTML += `Testing ${endpoint}...\n`;
+                
+                try {
+                    const response = await fetch(PROXY_BASE + endpoint, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.text();
+                    
+                    if (response.ok) {
+                        resultDiv.innerHTML += `✅ ${endpoint}: ${response.status}\n`;
+                    } else {
+                        resultDiv.innerHTML += `❌ ${endpoint}: ${response.status} - ${data}\n`;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML += `❌ ${endpoint}: Error - ${error.message}\n`;
+                }
+                
+                resultDiv.innerHTML += '\n';
+            }
+            
+            resultDiv.innerHTML += '🎉 All endpoint tests completed!';
+        }
+
+        function copyCommands() {
+            const commands = document.getElementById('consoleCommands').textContent;
+            navigator.clipboard.writeText(commands).then(() => {
+                alert('Console commands copied to clipboard!');
+            });
+        }
+
+        // Update console commands when token changes
+        document.getElementById('tokenInput').addEventListener('input', updateConsoleCommands);
+        
+        // Initialize
+        updateConsoleCommands();
+    </script>
+</body>
+</html> 
