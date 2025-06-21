@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "https://shafitraders.github.io/quantora-dashboard-production/static/css/main.7c042c23.css",
+    "main.js": "https://shafitraders.github.io/quantora-dashboard-production/static/js/main.fa5a2330.js",
+    "index.html": "https://shafitraders.github.io/quantora-dashboard-production/index.html",
+    "main.7c042c23.css.map": "https://shafitraders.github.io/quantora-dashboard-production/static/css/main.7c042c23.css.map",
+    "main.fa5a2330.js.map": "https://shafitraders.github.io/quantora-dashboard-production/static/js/main.fa5a2330.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7c042c23.css",
+    "static/js/main.fa5a2330.js"
+  ]
+}
